@@ -68,14 +68,15 @@ Heap::Heap(int c, compareFn f) {
 }
 
 Heap::Heap(int c, compareFn f, vector<int> &a) {
-    //Assuming c >= a.size() 
-    assert(c >= 0);
     capacity = c;
     size = a.size();
     comparator = f;
-    elementStore = a;
+    elementStore.resize(size);
+    for(int i = 0; i < size; i++)
+        elementStore[i] = a[i];
     heapName = "<NotDefined>";
     assert(a.size() == elementStore.size());
+    assert(equal(a.begin(), a.end(), elementStore.begin()));
     if(size)
        heapify(0);
 }
@@ -131,7 +132,7 @@ int Heap::getCapacity(void) {
     return capacity;
 }
 bool Heap::isValidIndex(int index) {
-    if((index >= size) || (index < 0)) 
+    if((index >= size) || (index < 0))
        return false;
     else
        return true;
@@ -159,7 +160,7 @@ void Heap::heapify(int curIndex) {
        better = left;
     if(isValidIndex(right) && comparator(elementStore[right], elementStore[better]))
        better = right;
-    
+
     if(better != curIndex) {
         exchange(elementStore[better], elementStore[curIndex]);
         heapify(better);
@@ -257,9 +258,9 @@ int main() {
     minh.insertKey(3);
     cout << "added 3\n";
     cout << minh.getTop() << endl;
-    
+
     cout << "Now using max heap\n";
-    
+
     MaxHeap maxh;
     maxh.insertKey(4);
     cout << "added 4\n";
