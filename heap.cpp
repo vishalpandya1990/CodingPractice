@@ -68,6 +68,8 @@ Heap::Heap(int c, compareFn f) {
 }
 
 Heap::Heap(int c, compareFn f, vector<int> &a) {
+    //assert(c >= 0);
+    assert(c >= a.size());
     capacity = c;
     size = a.size();
     comparator = f;
