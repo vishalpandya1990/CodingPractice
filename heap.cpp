@@ -5,8 +5,9 @@
 using namespace std;
 
 //Use proper macros so that both min heap and max heap are handled.
-#define UNDEFINED 1000001   //remove it
-#define ERROR -1 //use exceptions handling
+#define UNDEFINED 1000001    //remove it
+#define ERROR -1            //use exceptions handling
+#define DEFAULT_HEAP_CAPACITY 7
 
 typedef bool (*compareFn) (int, int);
 
@@ -50,7 +51,9 @@ class Heap {
 };
 
 Heap::Heap(compareFn f) {
-    capacity = UNDEFINED;
+    capacity = DEFAULT_HEAP_CAPACITY;
+    elementStore.resize(capacity);
+    assert(capacity == elementStore.size());
     size = 0;
     comparator = f;
     heapName = "<NotDefined>";
@@ -68,30 +71,30 @@ Heap::Heap(int c, compareFn f) {
 }
 
 Heap::Heap(int c, compareFn f, vector<int> &a) {
-    //assert(c >= 0);
-    assert(c >= a.size());
+    assert((c >= 0) && (c >= a.size()));
     capacity = c;
     size = a.size();
     comparator = f;
-    elementStore.resize(size);
+    elementStore.resize(capacity);
     for(int i = 0; i < size; i++)
         elementStore[i] = a[i];
     heapName = "<NotDefined>";
-    assert(a.size() == elementStore.size());
-    assert(equal(a.begin(), a.end(), elementStore.begin()));
+    assert(capacity == elementStore.size());
+    assert(size == a.size());
+    //can put here assert for values' equality check
     if(size)
        heapify(0);
 }
 
 Heap::Heap(int c, compareFn f, int *a, int n) {
-    //Assuming c >= n
-    assert(c >= 0);
+    assert((c >= 0) && (c >= n));
     capacity = c;
     size = n;
     comparator = f;
     heapName = "<NotDefined>";
+    elementStore.resize(capacity);
     for(int i = 0; i < n; i++)
-      elementStore.push_back(a[i]);
+      elementStore[i] = a[i];
     assert(c == elementStore.size());
     if(size)
        heapify(0);
@@ -120,7 +123,7 @@ int Heap::getRightChild(int index) {
 }
 
 int Heap::getParent(int index){
-    if(index && isValidIndex(index)) {
+    if(isValidIndex(index)) {
         return ((index - 1) >> 1);
     }
     return -1;
@@ -162,7 +165,6 @@ void Heap::heapify(int curIndex) {
        better = left;
     if(isValidIndex(right) && comparator(elementStore[right], elementStore[better]))
        better = right;
-
     if(better != curIndex) {
         exchange(elementStore[better], elementStore[curIndex]);
         heapify(better);
@@ -170,9 +172,15 @@ void Heap::heapify(int curIndex) {
 }
 
 int Heap::insertKey(int key) {
-    if(isFull()) return 1; //1 for error - 0 for success
-    elementStore.push_back(key);
-    size++; //add at newly created last position
+    if(isFull()) {
+        cout << "Heap Full: " << "current-size = " << size << "current-capacity = " << capacity << endl;
+        cout << "Expanding the element store now..." << endl;
+        elementStore.resize(2*capacity);
+        assert(elementStore.size() == 2*capacity);
+        capacity = 2*capacity;
+    }
+    elementStore[size] = key;
+    size++;
     int curIndex = size - 1;
     int parent = getParent(curIndex);
     while((curIndex > 0) && (comparator(elementStore[curIndex], elementStore[parent]))) {
@@ -180,13 +188,12 @@ int Heap::insertKey(int key) {
         curIndex = parent;
         parent = getParent(curIndex);
     }
-    return 0;
+    return 0; //1 for error - 0 for success
 }
 
-//only considers changes to make existing values "better"
 int Heap::changeKey(int index, int key) {
     if(!isValidIndex(index)) return 1;
-    if(comparator(elementStore[index], key)) return 1;
+    if(comparator(elementStore[index], key)) return 1; //only considers changes to make existing values "better"
     elementStore[index] = key;
     int curIndex = index;
     int parent = getParent(curIndex);
@@ -195,20 +202,19 @@ int Heap::changeKey(int index, int key) {
         curIndex = parent;
         parent = getParent(curIndex);
     }
-    return 0;
+    return 0; //1 for error, 0 for success
 }
 
 int Heap::getTop(void) {
-    if(isEmpty()) return UNDEFINED;
+    if(isEmpty()) return UNDEFINED;  //Need proper UNDEFINED value for distinguishing error with genuine top value
     return elementStore[0];
 }
 
 int Heap::deleteTop(void) {
-    if(isEmpty()) return 1; //1 for error - 0 for success
+    if(isEmpty()) return -1; //Need proper value to distinguish error scenario with genuine top value
     int curTop = getTop();
     elementStore[0] = elementStore[size - 1]; //can't use changeKey since we may be "worsening" the top value
     size--;
-    elementStore.resize(size);
     heapify(0);
     return curTop;
 }
