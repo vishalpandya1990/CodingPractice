@@ -5,11 +5,29 @@
 using namespace std;
 
 //Use proper macros so that both min heap and max heap are handled.
-#define UNDEFINED 1000001    //remove it
-#define ERROR -1            //use exceptions handling
-#define DEFAULT_HEAP_CAPACITY 7
+#define UNDEFINED              1000001    //remove it
+#define ERROR                  -1         //use exceptions handling
+#define DEFAULT_HEAP_CAPACITY   5
 
 typedef bool (*compareFn) (int, int);
+
+#define ENABLE_DEBUG_PRINT     0
+#define ENABLE_EXCEPTION_PRINT 1
+void debugPrint(string msg) {
+   #if ENABLE_DEBUG_PRINT
+      if(!msg.empty()) {
+        cout << msg << endl;
+      }
+   #endif // ENABLE_DEBUG_PRINT
+}
+
+void exceptionPrint(string exceptionMessage) {
+   #if ENABLE_EXCEPTION_PRINT
+     if(!exceptionMessage.empty()) {
+        cout << "Exception encountered: " <<  exceptionMessage << endl;
+      }
+   #endif // ENABLE_EXCEPTION_PRINT
+}
 
 bool smaller (int a, int b) {
     return a < b;
@@ -48,6 +66,7 @@ class Heap {
       void printElementStore(void);
       string getHeapName(void);
       void setHeapName(string);
+      void printHeapStats(void);
 };
 
 Heap::Heap(compareFn f) {
@@ -106,6 +125,12 @@ string Heap::getHeapName(void) {
 
 void Heap::setHeapName(string name) {
     heapName = name;
+}
+
+void Heap::printHeapStats(void) {
+   cout << "Heap-name = " << heapName << ": " ;
+   cout << "Heap-size = " << size << " ";
+   cout << "Heap-capacity = " << capacity << endl;
 }
 
 int Heap::getLeftChild(int index) {
@@ -173,8 +198,9 @@ void Heap::heapify(int curIndex) {
 
 int Heap::insertKey(int key) {
     if(isFull()) {
-        cout << "Heap Full: " << "current-size = " << size << "current-capacity = " << capacity << endl;
-        cout << "Expanding the element store now..." << endl;
+        exceptionPrint("HeapFull");
+        printHeapStats();
+        exceptionPrint("HeapExpansion since Heap is full.");
         elementStore.resize(2*capacity);
         assert(elementStore.size() == 2*capacity);
         capacity = 2*capacity;
@@ -221,7 +247,7 @@ int Heap::deleteTop(void) {
 
 void Heap::printElementStore(void) {
      if(isEmpty()) {
-         cout << heapName << ": " << "It is empty" << endl;
+         exceptionPrint("HeapEmpty");
          return;
      }
      cout << heapName << ": ";
@@ -247,7 +273,6 @@ class MaxHeap : public Heap {
       MaxHeap(int c, vector<int> &a) : Heap(c, bigger, a) {}
       MaxHeap(int c, int* a, int n) : Heap(c, bigger, a, n) {}
 };
-
 int main() {
     cout << "Using min heap first\n";
     MinHeap minh;
